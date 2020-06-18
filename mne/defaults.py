@@ -15,13 +15,13 @@ DEFAULTS = dict(
     units=dict(mag='fT', grad='fT/cm', eeg='µV', eog='µV', ecg='µV', emg='µV',
                misc='AU', seeg='mV', dipole='nAm', gof='GOF', bio='µV',
                ecog='µV', hbo='µM', hbr='µM', ref_meg='fT', fnirs_raw='V',
-               fnirs_od='V', fnirs_ph=u'\N{DEGREE SIGN}', csd='V/m²'),
+               fnirs_od='V', fnirs_ph=u'\N{DEGREE SIGN}', csd='mV/m²'),
 
     # scalings for the units
     scalings=dict(mag=1e15, grad=1e13, eeg=1e6, eog=1e6, emg=1e6, ecg=1e6,
                   misc=1.0, seeg=1e3, dipole=1e9, gof=1.0, bio=1e6, ecog=1e6,
                   hbo=1e6, hbr=1e6, ref_meg=1e15, fnirs_raw=1.0, fnirs_od=1.0,
-                  fnirs_ph=1.0, csd=1e5),
+                  fnirs_ph=1.0, csd=1e3),
 
     # rough guess for a good plot
     scalings_plot_raw=dict(mag=1e-12, grad=4e-11, eeg=20e-6, eog=150e-6,

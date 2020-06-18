@@ -527,6 +527,11 @@ class RawBOXY(BaseRaw):
 
                                 # Save our data based on data type.
                                 data_[index_loc, :] = boxy_array[:, channel]
+                                
+                    ###need to fix the first few bad points in the recording###
+                    n_bad_points = 12
+                    for i_point in range(n_bad_points):
+                        data_[:,i_point] = data_[:,n_bad_points] 
 
                     # Phase unwrapping.
                     if i_data == 'Ph':
@@ -546,7 +551,7 @@ class RawBOXY(BaseRaw):
 
                         print('Detrending phase data')
                         # Remove trends and drifts that occur over time.
-                        y = np.linspace(0, np.size(data_, axis=1)-1,
+                        y = np.linspace(1, np.size(data_, axis=1),
                                         np.size(data_, axis=1))
                         x = np.transpose(y)
                         for i_chan in range(np.size(data_, axis=0)):
@@ -579,18 +584,30 @@ class RawBOXY(BaseRaw):
                             if len(outliers) > 0:
                                 if outliers[0] == 0:
                                     outliers = outliers[1:]
-                                if len(outliers) > 0:
-                                    if (outliers[-1] == np.size(data_,
-                                                                axis=1) - 1):
-                                        outliers = outliers[:-1]
-                                    n_ph_out[i_chan] = int(len(outliers))
-                                    for i_pt in range(n_ph_out[i_chan]):
-                                        j_pt = outliers[i_pt]
-                                        data_[i_chan, j_pt] = (
-                                            (data_[i_chan, j_pt - 1] +
-                                             data_[i_chan, j_pt + 1]) / 2)
-
-                        # Convert phase to pico seconds.
+                                # if len(outliers) > 0:
+                                if (outliers[-1] == np.size(data_,
+                                                            axis=1) - 1):
+                                    outliers = outliers[:-1]
+                                n_ph_out[i_chan] = int(len(outliers))
+                                for i_pt in range(n_ph_out[i_chan]):
+                                    j_pt = outliers[i_pt]
+                                    data_[i_chan, j_pt] = (
+                                        (data_[i_chan, j_pt - 1] +
+                                         data_[i_chan, j_pt + 1]) / 2)
+                            
+                    # now let's normalise our data #
+                    test = []
+                    for i_chan in range(len(data_)):
+                        if i_data == 'Ph':
+                            data_[i_chan,:] = (data_[i_chan,:] - 
+                                               np.mean(data_[i_chan,:]))
+                            test.append(np.mean(data_[i_chan,:]))
+                        else:
+                            data_[i_chan,:] = (data_[i_chan,:] /
+                                               np.mean(data_[i_chan,:]) - 1)
+                            
+                    # Convert phase to pico seconds.
+                    if i_data == 'Ph':
                         for i_chan in range(np.size(data_, axis=0)):
                             data_[i_chan, :] = ((1e12 * data_[i_chan, :]) /
                                                 (360 * mtg_mdf[i_mtg][i_chan]))
