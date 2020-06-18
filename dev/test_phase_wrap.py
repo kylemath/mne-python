@@ -21,7 +21,22 @@ with open(filename, 'rb') as f:
     all_data = pickle.load(f)
     
 ###phase unwrapping###
-thresh = 0.00000001 #determine to which decimal place we will compare
+thresh = 1e-10 #determine to which decimal place we will compare
+
+# print('Fixing first few bad points')
+
+n_bad_points = 12
+for i_point in range(n_bad_points):
+    all_data[:,i_point] = all_data[:,n_bad_points] 
+    
+filename = os.path.join(crnt_dir, 'dev' , 'matlab_files', 'data_first_bad_python.mat')
+first_bad_data = scipy.io.loadmat(filename)
+
+test6 = abs(first_bad_data['data'] - all_data) <= thresh
+if test6.all():
+    print("SUCCESS! First bad matches Matlab to " + str(thresh) + " decimal points!")
+else:
+    print("FAILURE! First bad DOES NOT match Matlab to " + str(thresh) + " decimal points!")
 
 # print('Fixing phase wrap')
 
@@ -46,7 +61,7 @@ else:
 # scipy.io.savemat(file_name = r"C:\Users\spork\Desktop\all_dataunwrap_matlab.mat",
 #               mdict=dict(data=all_data))
 
-y = np.linspace(0, np.size(all_data, axis=1)-1,
+y = np.linspace(1, np.size(all_data, axis=1),
                 np.size(all_data, axis=1))
 x = np.transpose(y)
 for i_chan in range(np.size(all_data, axis=0)):
@@ -113,6 +128,21 @@ if test4.all():
     print("SUCCESS! Removed outliers match Matlab to " + str(thresh) + " decimal points!")
 else:
     print("FAILURE! Removed outliers DO NOT match Matlab to " + str(thresh) + " decimal points!")
+    
+    
+# now let's normalise our data #
+for i_chan in range(len(all_data)):
+    all_data[i_chan,:] = (all_data[i_chan,:] - np.mean(all_data[i_chan,:]))
+    
+filename = os.path.join(crnt_dir, 'dev' , 'matlab_files', 'data_norm_python.mat')
+outlier_data = scipy.io.loadmat(filename)
+
+test7 = abs(outlier_data['data'] - all_data) <= thresh
+if test4.all():
+    print("SUCCESS! Norm data matches Matlab to " + str(thresh) + " decimal points!")
+else:
+    print("FAILURE! Norm data DOES NOT match Matlab to " + str(thresh) + " decimal points!")
+
 
 #convert phase to pico seconds
 # scipy.io.savemat(file_name = r"C:\Users\spork\Desktop\data_picosec_matlab.mat",

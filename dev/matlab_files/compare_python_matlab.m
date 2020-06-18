@@ -4,6 +4,17 @@ filename = fullfile(pwd, 'dev' , 'matlab_files', 'data_matlab.mat')
 data = load(filename)
 data = data.data;
 
+% remove first few bad points
+
+n_bad_points = 12
+for index = 1:n_bad_points
+    data(:,index)=data(:,n_bad_points+1);
+end
+
+save(fullfile(pwd, 'dev' , 'matlab_files', 'data_first_bad_python.mat'),'data')
+
+% fix phase wrap
+
 for i_chan=1:size(data,1)
     if mean(data(i_chan,1:50)) < 180
         wrapped_pts=find(data(i_chan,:)>270);
@@ -19,6 +30,8 @@ save(fullfile(pwd, 'dev' , 'matlab_files', 'data_unwrap_python.mat'),'data')
 
 % data = load("C:\Users\spork\Desktop\data_unwrap_matlab.mat")
 % data = data.data;
+
+% detrend data
 
 y=1:size(data,2);
 x=y;
@@ -73,6 +86,17 @@ for i_chan=1:size(data,1)
 end
 
 save(fullfile(pwd, 'dev' , 'matlab_files', 'data_outliers_python.mat'),'data')
+
+% normalise data
+mrph=mean(data,2);
+
+for i_chan=1:size(data,1)
+    data(i_chan,:)=(data(i_chan,:)-mrph(i_chan));
+end
+
+save(fullfile(pwd, 'dev' , 'matlab_files', 'data_norm_python.mat'),'data')
+
+% convert to picoseconds
 
 mod_freq = 1.1e8;
 data=1e12*data/(360*mod_freq); % convert phase to ps
