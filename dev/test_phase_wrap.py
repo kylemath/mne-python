@@ -100,7 +100,7 @@ else:
 #               mdict=dict(data=all_data))
 
 ph_out_thr=3;
-sdph=np.std(all_data,1, ddof = 1); #set ddof to 1 to mimic matlab
+sdph=np.std(all_data[:,n_bad_points-1:-1],1, ddof = 1); #set ddof to 1 to mimic matlab
 n_ph_out = np.zeros(np.size(all_data, axis=0), dtype= np.int8)
 
 for i_chan in range(np.size(all_data, axis=0)):
