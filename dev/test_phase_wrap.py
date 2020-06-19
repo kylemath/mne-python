@@ -110,15 +110,14 @@ for i_chan in range(np.size(all_data, axis=0)):
     if len(outliers) > 0:
         if outliers[0] == 0:
             outliers = outliers[1:]
-        if len(outliers) > 0:
-            if outliers[-1] == np.size(all_data, axis=1) - 1:
-                outliers = outliers[:-1]
-            n_ph_out[i_chan] = int(len(outliers))
-            for i_pt in range(n_ph_out[i_chan]):
-                j_pt = outliers[i_pt]
-                all_data[i_chan,j_pt] = (
-                    (all_data[i_chan,j_pt-1] + 
-                      all_data[i_chan,j_pt+1])/2)
+        if outliers[-1] == np.size(all_data, axis=1) - 1:
+            outliers = outliers[:-1]
+        n_ph_out[i_chan] = int(len(outliers))
+        for i_pt in range(n_ph_out[i_chan]):
+            j_pt = outliers[i_pt]
+            all_data[i_chan,j_pt] = (
+                (all_data[i_chan,j_pt-1] + 
+                  all_data[i_chan,j_pt+1])/2)
                 
 filename = os.path.join(crnt_dir, 'dev' , 'matlab_files', 'data_outliers_python.mat')
 outlier_data = scipy.io.loadmat(filename)
