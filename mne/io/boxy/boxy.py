@@ -573,8 +573,6 @@ class RawBOXY(BaseRaw):
                         ph_out_thr = 3
 
                         # Set ddof to 1 to mimic matlab.
-                        import pdb
-                        pdb.set_trace()
                         sdph = np.std(data_[:, n_bad_points - 1:], 1, ddof=1)
                         n_ph_out = np.zeros(np.size(data_, axis=0),
                                             dtype=np.int8)
