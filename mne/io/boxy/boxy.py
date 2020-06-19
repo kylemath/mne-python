@@ -573,7 +573,9 @@ class RawBOXY(BaseRaw):
                         ph_out_thr = 3
 
                         # Set ddof to 1 to mimic matlab.
-                        sdph = np.std(data_, 1, ddof=1)
+                        import pdb
+                        pdb.set_trace()
+                        sdph = np.std(data_[:, n_bad_points - 1:], 1, ddof=1)
                         n_ph_out = np.zeros(np.size(data_, axis=0),
                                             dtype=np.int8)
 
@@ -584,7 +586,6 @@ class RawBOXY(BaseRaw):
                             if len(outliers) > 0:
                                 if outliers[0] == 0:
                                     outliers = outliers[1:]
-                                # if len(outliers) > 0:
                                 if (outliers[-1] == np.size(data_,
                                                             axis=1) - 1):
                                     outliers = outliers[:-1]
@@ -596,12 +597,10 @@ class RawBOXY(BaseRaw):
                                          data_[i_chan, j_pt + 1]) / 2)
                             
                     # now let's normalise our data #
-                    test = []
                     for i_chan in range(len(data_)):
                         if i_data == 'Ph':
                             data_[i_chan,:] = (data_[i_chan,:] - 
                                                np.mean(data_[i_chan,:]))
-                            test.append(np.mean(data_[i_chan,:]))
                         else:
                             data_[i_chan,:] = (data_[i_chan,:] /
                                                np.mean(data_[i_chan,:]) - 1)
