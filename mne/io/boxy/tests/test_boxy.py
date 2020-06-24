@@ -3,6 +3,24 @@
 #          Eric Larson <larson.eric.d@gmail.com>
 #          simplified BSD-3 license
 
+541
+                    ###need to fix the first few bad points in the recording###
+                    n_bad_points = 12
+                    for i_point in range(n_bad_points):
+                        data_[:,i_point] = data_[:,n_bad_points] 
+
+604
+                    # now let's normalise our data #
+                    for i_chan in range(len(data_)):
+                        if i_data == 'Ph':
+                            data_[i_chan,:] = (data_[i_chan,:] - 
+                                               np.mean(data_[i_chan,:]))
+                        else:
+                            data_[i_chan,:] = (data_[i_chan,:] /
+                                               np.mean(data_[i_chan,:]) - 1)
+
+
+
 import os.path as op
 import shutil
 
