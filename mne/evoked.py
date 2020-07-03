@@ -384,9 +384,10 @@ class Evoked(ProjMixin, ContainsMixin, UpdateChannelsMixin, SetChannelsMixin,
         ----------
         ch_type : str | None
             Channel type to plot. Accepted data types: 'mag', 'grad', 'eeg',
-            'hbo', 'hbr', 'fnirs_od, and 'fnirs_raw'.
+            'hbo', 'hbr', 'fnirs_od, and 'fnirs_cw_amplitude'.
             If None, first available channel type from ('mag', 'grad', 'eeg',
-            'hbo', 'hbr', 'fnirs_od, 'fnirs_raw') is used. Defaults to None.
+            'hbo', 'hbr', 'fnirs_od, 'fnirs_cw_amplitude') is used.
+            Defaults to None.
         times : array of float | None
             The time points to plot. If None, 10 evenly spaced samples are
             calculated over the evoked time series. Defaults to None.
@@ -550,7 +551,7 @@ class Evoked(ProjMixin, ContainsMixin, UpdateChannelsMixin, SetChannelsMixin,
             .. versionadded:: 0.16
         """  # noqa: E501
         supported = ('mag', 'grad', 'eeg', 'seeg', 'ecog', 'misc', 'hbo',
-                     'hbr', 'None', 'fnirs_raw', 'fnirs_od')
+                     'hbr', 'None', 'fnirs_cw_amplitude', 'fnirs_od')
         types_used = self.get_channel_types(unique=True, only_data_chs=True)
 
         _check_option('ch_type', str(ch_type), supported)
@@ -583,7 +584,7 @@ class Evoked(ProjMixin, ContainsMixin, UpdateChannelsMixin, SetChannelsMixin,
             seeg = True
         elif ch_type == 'ecog':
             ecog = True
-        elif ch_type in ('hbo', 'hbr', 'fnirs_raw', 'fnirs_od'):
+        elif ch_type in ('hbo', 'hbr', 'fnirs_cw_amplitude', 'fnirs_od'):
             fnirs = ch_type
 
         if ch_type is not None:
@@ -746,7 +747,7 @@ class EvokedArray(Evoked):
         self.first = int(round(tmin * info['sfreq']))
         self.last = self.first + np.shape(data)[-1] - 1
         self.times = np.arange(self.first, self.last + 1,
-                               dtype=np.float) / info['sfreq']
+                               dtype=np.float64) / info['sfreq']
         self.info = info.copy()  # do not modify original info
         self.nave = nave
         self.kind = kind
@@ -1111,7 +1112,7 @@ def _read_evoked(fname, condition=None, kind='average', allow_maxshield=False):
         else:
             # Put the old style epochs together
             data = np.concatenate([e.data[None, :] for e in epoch], axis=0)
-        data = data.astype(np.float)
+        data = data.astype(np.float64)
 
         if first_time is not None and nsamp is not None:
             times = first_time + np.arange(nsamp) / info['sfreq']
@@ -1163,6 +1164,7 @@ def write_evokeds(fname, evoked):
 
 def _write_evokeds(fname, evoked, check=True):
     """Write evoked data."""
+    from .epochs import _compare_epochs_infos
     if check:
         check_fname(fname, 'evoked', ('-ave.fif', '-ave.fif.gz',
                                       '_ave.fif', '_ave.fif.gz'))
@@ -1184,7 +1186,9 @@ def _write_evokeds(fname, evoked, check=True):
 
         # One or more evoked data sets
         start_block(fid, FIFF.FIFFB_PROCESSED_DATA)
-        for e in evoked:
+        for ei, e in enumerate(evoked):
+            if ei:
+                _compare_epochs_infos(evoked[0].info, e.info, f'evoked[{ei}]')
             start_block(fid, FIFF.FIFFB_EVOKED)
 
             # Comment is optional
@@ -1277,7 +1281,7 @@ def _get_peak(data, times, tmin=None, tmax=None, mode='abs'):
         raise ValueError('The tmin must be smaller or equal to tmax')
 
     time_win = (times >= tmin) & (times <= tmax)
-    mask = np.ones_like(data).astype(np.bool)
+    mask = np.ones_like(data).astype(bool)
     mask[:, time_win] = False
 
     maxfun = np.argmax

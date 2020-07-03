@@ -846,8 +846,8 @@ def compute_covariance(epochs, keep_sample_mean=True, tmin=None, tmax=None,
         # prepare mean covs
         n_epoch_types = len(epochs)
         data_mean = [0] * n_epoch_types
-        n_samples = np.zeros(n_epoch_types, dtype=np.int)
-        n_epochs = np.zeros(n_epoch_types, dtype=np.int)
+        n_samples = np.zeros(n_epoch_types, dtype=np.int64)
+        n_epochs = np.zeros(n_epoch_types, dtype=np.int64)
 
         for ii, epochs_t in enumerate(epochs):
 
@@ -1183,8 +1183,9 @@ class _RegCovariance(BaseEstimator):
     """Aux class."""
 
     def __init__(self, info, grad=0.1, mag=0.1, eeg=0.1, seeg=0.1, ecog=0.1,
-                 hbo=0.1, hbr=0.1, fnirs_raw=0.1, fnirs_od=0.1,
-                 csd=0.1, store_precision=False, assume_centered=False):
+                 hbo=0.1, hbr=0.1, fnirs_cw_amplitude=0.1, fnirs_fd_phase=0.1,
+                 fnirs_od=0.1, csd=0.1,
+                 store_precision=False, assume_centered=False):
         self.info = info
         # For sklearn compat, these cannot (easily?) be combined into
         # a single dictionary
@@ -1195,8 +1196,9 @@ class _RegCovariance(BaseEstimator):
         self.ecog = ecog
         self.hbo = hbo
         self.hbr = hbr
-        self.fnirs_raw = fnirs_raw
+        self.fnirs_cw_amplitude = fnirs_cw_amplitude
         self.fnirs_od = fnirs_od
+        self.fnirs_fd_phase = fnirs_fd_phase
         self.csd = csd
         self.store_precision = store_precision
         self.assume_centered = assume_centered
@@ -1473,8 +1475,8 @@ def _smart_eigh(C, info, rank, scalings=None, projs=None,
 @verbose
 def regularize(cov, info, mag=0.1, grad=0.1, eeg=0.1, exclude='bads',
                proj=True, seeg=0.1, ecog=0.1, hbo=0.1, hbr=0.1,
-               fnirs_raw=0.1, fnirs_od=0.1, csd=0.1,
-               rank=None, scalings=None, verbose=None):
+               fnirs_cw_amplitude=0.1, fnirs_fd_phase=0.1, fnirs_od=0.1,
+               csd=0.1, rank=None, scalings=None, verbose=None):
     """Regularize noise covariance matrix.
 
     This method works by adding a constant to the diagonal for each
@@ -1514,8 +1516,10 @@ def regularize(cov, info, mag=0.1, grad=0.1, eeg=0.1, exclude='bads',
         Regularization factor for HBO signals.
     hbr : float (default 0.1)
         Regularization factor for HBR signals.
-    fnirs_raw : float (default 0.1)
+    fnirs_cw_amplitude : float (default 0.1)
         Regularization factor for fNIRS raw signals.
+    fnirs_fd_phase : float (default 0.1)
+        Regularization factor for fNIRS FD phase.
     fnirs_od : float (default 0.1)
         Regularization factor for fNIRS optical density signals.
     csd : float (default 0.1)
@@ -1546,7 +1550,9 @@ def regularize(cov, info, mag=0.1, grad=0.1, eeg=0.1, exclude='bads',
     info._check_consistency()
     scalings = _handle_default('scalings_cov_rank', scalings)
     regs = dict(eeg=eeg, seeg=seeg, ecog=ecog, hbo=hbo, hbr=hbr,
-                fnirs_raw=fnirs_raw, fnirs_od=fnirs_od, csd=csd)
+                fnirs_cw_amplitude=fnirs_cw_amplitude,
+                fnirs_fd_phase=fnirs_fd_phase,
+                fnirs_od=fnirs_od, csd=csd)
 
     if exclude is None:
         raise ValueError('exclude must be a list of strings or "bads"')
@@ -1757,7 +1763,7 @@ def compute_whitener(noise_cov, info=None, picks=None, rank=None,
     nzero = (eig > 0)
     eig[~nzero] = 0.  # get rid of numerical noise (negative) ones
 
-    W = np.zeros((n_chan, 1), dtype=np.float)
+    W = np.zeros((n_chan, 1), dtype=np.float64)
     W[nzero, 0] = 1.0 / np.sqrt(eig[nzero])
     #   Rows of eigvec are the eigenvectors
     W = W * noise_cov['eigvec']  # C ** -0.5
@@ -1963,7 +1969,7 @@ def _write_cov(fid, cov):
     else:
         # Store only lower part of covariance matrix
         dim = cov['dim']
-        mask = np.tril(np.ones((dim, dim), dtype=np.bool)) > 0
+        mask = np.tril(np.ones((dim, dim), dtype=bool)) > 0
         vals = cov['data'][mask].ravel()
         write_double(fid, FIFF.FIFF_MNE_COV, vals)
 

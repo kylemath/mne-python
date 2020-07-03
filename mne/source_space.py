@@ -803,7 +803,7 @@ def _read_one_source_space(fid, this):
     if tag is None:
         raise ValueError('Vertex data not found')
 
-    res['rr'] = tag.data.astype(np.float)  # double precision for mayavi
+    res['rr'] = tag.data.astype(np.float64)  # double precision for mayavi
     if res['rr'].shape[0] != res['np']:
         raise ValueError('Vertex information is incorrect')
 
@@ -835,7 +835,7 @@ def _read_one_source_space(fid, this):
     tag = find_tag(fid, this, FIFF.FIFF_MNE_SOURCE_SPACE_NUSE)
     if tag is None:
         res['nuse'] = 0
-        res['inuse'] = np.zeros(res['nuse'], dtype=np.int)
+        res['inuse'] = np.zeros(res['nuse'], dtype=np.int64)
         res['vertno'] = None
     else:
         res['nuse'] = int(tag.data)
@@ -843,7 +843,7 @@ def _read_one_source_space(fid, this):
         if tag is None:
             raise ValueError('Source selection information missing')
 
-        res['inuse'] = tag.data.astype(np.int).T
+        res['inuse'] = tag.data.astype(np.int64).T
         if len(res['inuse']) != res['np']:
             raise ValueError('Incorrect number of entries in source space '
                              'selection')
@@ -2504,17 +2504,17 @@ def add_source_space_distances(src, dist_limit=np.inf, n_jobs=1, verbose=None):
              'hemisphere) will be very slow, consider using add_dist=False'
              % (max_n,))
     for s in src:
-        connectivity = mesh_dist(s['tris'], s['rr'])
+        adjacency = mesh_dist(s['tris'], s['rr'])
         if patch_only:
             min_dist, _, min_idx = dijkstra(
-                connectivity, indices=s['vertno'],
+                adjacency, indices=s['vertno'],
                 min_only=True, return_predecessors=True)
             min_dists.append(min_dist.astype(np.float32))
             min_idxs.append(min_idx)
             for key in ('dist', 'dist_limit'):
                 s[key] = None
         else:
-            d = parallel(p_fun(connectivity, s['vertno'], r, dist_limit)
+            d = parallel(p_fun(adjacency, s['vertno'], r, dist_limit)
                          for r in np.array_split(np.arange(len(s['vertno'])),
                                                  n_jobs))
             # deal with indexing so we can add patch info

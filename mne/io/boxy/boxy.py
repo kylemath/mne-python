@@ -5,7 +5,6 @@
 import glob as glob
 import re as re
 import numpy as np
-import scipy.io
 import os
 
 from ..base import BaseRaw
@@ -18,18 +17,21 @@ from ...channels.montage import make_dig_montage
 @fill_doc
 def read_raw_boxy(fname, datatype='AC', preload=False, verbose=None):
     """Reader for a BOXY optical imaging recording.
+
     Parameters
     ----------
     fname : str
         Path to the BOXY data folder.
     datatype : str
-        Type of data to return (AC, DC, or Ph)
+        Type of data to return (AC, DC, or Ph).
     %(preload)s
     %(verbose)s
+
     Returns
     -------
     raw : instance of RawBOXY
         A Raw object containing BOXY data.
+
     See Also
     --------
     mne.io.Raw : Documentation of attribute and methods.
@@ -40,14 +42,16 @@ def read_raw_boxy(fname, datatype='AC', preload=False, verbose=None):
 @fill_doc
 class RawBOXY(BaseRaw):
     """Raw object from a BOXY optical imaging file.
+
     Parameters
     ----------
     fname : str
         Path to the BOXY data folder.
     datatype : str
-        Type of data to return (AC, DC, or Ph)
+        Type of data to return (AC, DC, or Ph).
     %(preload)s
     %(verbose)s
+
     See Also
     --------
     mne.io.Raw : Documentation of attribute and methods.
@@ -64,6 +68,8 @@ class RawBOXY(BaseRaw):
         for key in keys:
             if key == '*.[000-999]*':
                 files[key] = [glob.glob('%s/*%s' % (fname, key))]
+                # make sure filenames are in order
+                files[key][0].sort()
             else:
                 files[key] = glob.glob('%s/*%s' % (fname, key))
             if len(files[key]) != 1:
@@ -281,9 +287,9 @@ class RawBOXY(BaseRaw):
 
         # Create info structure.
         if datatype == 'Ph':
-            chan_type = 'fnirs_ph'
+            chan_type = 'fnirs_fd_phase'
         else:
-            chan_type = 'fnirs_raw'
+            chan_type = 'fnirs_cw_amplitude'
 
         ch_types = ([chan_type if i_chan < np.sum(mtg_chan_num) else 'stim'
                      for i_chan, _ in enumerate(boxy_labels)])
@@ -376,7 +382,13 @@ class RawBOXY(BaseRaw):
 
     def _read_segment_file(self, data, idx, fi, start, stop, cals, mult):
         """Read a segment of data from a file.
+
+        Boxy file organises data in two ways, parsed or un-parsed.
+        Regardless of type, output has (n_montages x n_sources x n_detectors
+        + n_marker_channels) rows, and (n_timepoints x n_blocks) columns.
         """
+        import scipy.io as spio
+
         source_num = self._raw_extras[fi]['source_num']
         detect_num = self._raw_extras[fi]['detect_num']
         start_line = self._raw_extras[fi]['start_line']
@@ -401,7 +413,7 @@ class RawBOXY(BaseRaw):
             event_data = []
 
             for file_num, i_file in enumerate(event_files[key]):
-                event_data.append(scipy.io.loadmat(
+                event_data.append(spio.loadmat(
                     event_files[key][file_num])['event'])
             if event_data != []:
                 print('Event file found!')
@@ -541,7 +553,7 @@ class RawBOXY(BaseRaw):
                         # such as crossing over from 0/360 degrees.
                         # Estimate mean phase of first 50 points.
                         # If a point differs more than 90 degrees from the
-                        # mean, add or subtract 360 degress from that point.
+                        # mean, add or subtract 360 degrees from that point.
                         for i_chan in range(np.size(data_, axis=0)):
                             if np.mean(data_[i_chan, :50]) < 180:
                                 wrapped_points = data_[i_chan, :] > 270
@@ -580,7 +592,7 @@ class RawBOXY(BaseRaw):
 
                         for i_chan in range(np.size(data_, axis=0)):
                             outliers = np.where(np.abs(data_[i_chan, :]) >
-                                                (ph_out_thr*sdph[i_chan]))
+                                                (ph_out_thr * sdph[i_chan]))
                             outliers = outliers[0]
                             if len(outliers) > 0:
                                 if outliers[0] == 0:
@@ -620,7 +632,7 @@ class RawBOXY(BaseRaw):
                     temp_markers = np.zeros((len(data_[0, :]),))
                     for event_num, event_info in enumerate(
                             event_data[file_num]):
-                        temp_markers[event_info[0]-1] = event_info[1]
+                        temp_markers[event_info[0] - 1] = event_info[1]
                     block_markers.append(temp_markers)
                 except Exception:
                     # Add our markers to the data array based on filetype.

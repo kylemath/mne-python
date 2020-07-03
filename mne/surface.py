@@ -617,7 +617,7 @@ def _fread3(fobj):
 def _fread3_many(fobj, n):
     """Read 3-byte ints from an open binary file object."""
     b1, b2, b3 = np.fromfile(fobj, ">u1",
-                             3 * n).reshape(-1, 3).astype(np.int).T
+                             3 * n).reshape(-1, 3).astype(np.int64).T
     return (b1 << 16) + (b2 << 8) + b3
 
 
@@ -626,16 +626,15 @@ def read_curvature(filepath, binary=True):
 
     Parameters
     ----------
-    filepath: str
+    filepath : str
         Input path to the .curv file.
-    binary: bool
+    binary : bool
         Specify if the output array is to hold binary values. Defaults to True.
 
     Returns
     -------
-    curv: array, shape=(n_vertices,)
+    curv : array, shape=(n_vertices,)
         The curvature values loaded from the user given file.
-
     """
     with open(filepath, "rb") as fobj:
         magic = _fread3(fobj)
@@ -647,7 +646,7 @@ def read_curvature(filepath, binary=True):
             _fread3(fobj)
             curv = np.fromfile(fobj, ">i2", vnum) / 100
     if binary:
-        return 1 - np.array(curv != 0, np.int)
+        return 1 - np.array(curv != 0, np.int64)
     else:
         return curv
 
@@ -1602,8 +1601,8 @@ def mesh_edges(tris):
         The adjacency matrix.
     """
     if np.max(tris) > len(np.unique(tris)):
-        raise ValueError('Cannot compute connectivity on a selection of '
-                         'triangles.')
+        raise ValueError(
+            'Cannot compute adjacency on a selection of triangles.')
 
     npoints = np.max(tris) + 1
     ones_ntris = np.ones(3 * len(tris))

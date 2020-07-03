@@ -239,7 +239,8 @@ def _convert_channel_info(res4, t, use_eeg_pos):
                 nmeg += 1
                 ch['logno'] = nmeg
             # Encode the software gradiometer order
-            ch['coil_type'] = ch['coil_type'] | (cch['grad_order_no'] << 16)
+            ch['coil_type'] = int(
+                ch['coil_type'] | (cch['grad_order_no'] << 16))
             ch['coord_frame'] = FIFF.FIFFV_COORD_DEVICE
         elif cch['sensor_type_index'] == CTF.CTFV_EEG_CH:
             coord_frame = FIFF.FIFFV_COORD_HEAD
@@ -478,8 +479,8 @@ def _annotate_bad_segments(directory, start_time, meas_date):
         for f in fid.readlines():
             tmp = f.strip().split()
             desc.append('bad_%s' % tmp[0])
-            onsets.append(np.float(tmp[1]) - start_time)
-            durations.append(np.float(tmp[2]) - np.float(tmp[1]))
+            onsets.append(np.float64(tmp[1]) - start_time)
+            durations.append(np.float64(tmp[2]) - np.float64(tmp[1]))
     # return None if there are no bad segments
     if len(onsets) == 0:
         return None
