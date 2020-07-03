@@ -39,7 +39,7 @@ for m_num, i_mtg in enumerate(['a', 'b']):
     for b_num, i_blk in enumerate(['001', '002']):
 
         # Load our p_pod files.
-        filename = os.path.join(crnt_dir, 'dev', 'matlab_files', 'p_pod_files',
+        filename = os.path.join(crnt_dir, 'dev', 'boxy_p_pod_files',
                                 '1anc071' + i_mtg + '.' + i_blk +
                                 'raw_data.mat')
         ppod_raw = spio.loadmat(filename)
@@ -193,12 +193,12 @@ epoch_dict = dict(ac_a=epochs_ac_a,
 for m_num, i_mtg in enumerate(['a', 'b']):
 
     # Load our p_pod files, both blocks.
-    filename = os.path.join(crnt_dir, 'dev', 'matlab_files', 'p_pod_files',
+    filename = os.path.join(crnt_dir, 'dev', 'boxy_p_pod_files',
                             '1anc071' + i_mtg + '.001' +
                             'epoch_data.mat')
     ppod_epoch1 = spio.loadmat(filename)
 
-    filename = os.path.join(crnt_dir, 'dev', 'matlab_files', 'p_pod_files',
+    filename = os.path.join(crnt_dir, 'dev', 'boxy_p_pod_files',
                             '1anc071' + i_mtg + '.002' +
                             'epoch_data.mat')
     ppod_epoch2 = spio.loadmat(filename)
@@ -274,7 +274,7 @@ evoke_dict = dict(ac_a1=evoked_ac_a1,
 for m_num, i_mtg in enumerate(['a', 'b']):
 
     # Load in our p_pod files.
-    filename = os.path.join(crnt_dir, 'dev', 'matlab_files', 'p_pod_files',
+    filename = os.path.join(crnt_dir, 'dev', 'boxy_p_pod_files',
                             '1anc071' + i_mtg + '.002' +
                             'evoke_data.mat')
     ppod_evoke_all = spio.loadmat(filename)
