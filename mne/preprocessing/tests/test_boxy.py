@@ -3,14 +3,16 @@
 # License: BSD (3-clause)
 
 import os
-import numpy as np
 import re as re
-import scipy.io as spio
 
+import numpy as np
+import scipy.io as spio
 import pytest
+from numpy.testing import assert_array_equal
 
 import mne
 from mne.datasets import testing
+from mne.transforms import apply_trans, get_ras_to_neuromag_trans
 
 crnt_dir = os.getcwd()
 
@@ -37,6 +39,60 @@ mtg_list = [mtg_a, mtg_b]
 
 # Determine to which decimal place we will compare.
 thresh = 1e-10
+
+
+@testing.requires_testing_data
+@pytest.mark.parametrize('datatype,data', [('ac', raw_intensity_ac),
+                                           ('dc', raw_intensity_dc),
+                                           ('ph', raw_intensity_ph)])
+def test_boxy_load(datatype, data):
+    assert data._data.shape == (162, 376)
+    assert data.info['sfreq'] == 62.5
+
+    # Check channel names for montages and markers
+    assert data.info['ch_names'][:4] == ["S1_D1 690", "S1_D1 830",
+                                         "S2_D1 690", "S2_D1 830"]
+    assert data.info['ch_names'][80:84] == ["S6_D9 690", "S6_D9 830",
+                                            "S7_D9 690", "S7_D9 830"]
+    assert data.info['ch_names'][160:162] == ["Markers a", "Markers b"]
+
+    # Check wavelengths for montages
+    assert data.info['chs'][0]['loc'][9] == 690
+    assert data.info['chs'][1]['loc'][9] == 830
+    assert data.info['chs'][80]['loc'][9] == 690
+    assert data.info['chs'][81]['loc'][9] == 830
+
+    # Check our markers
+    all_events = mne.find_events(data, stim_channel=['Markers a'])
+    assert np.unique(all_events[:, 2]).tolist() == [1, 2, 1000, 2000]
+    all_events = mne.find_events(data, stim_channel=['Markers b'])
+    assert np.unique(all_events[:, 2]).tolist() == [1, 2, 1000, 2000]
+
+    # Check location of sources and detectors
+    fiducials = [[0.912775E-01, 0, 0],
+                 [0.599716E-03, 0.784103E-01, -0.231296E-17],
+                 [-0.606755E-02, -0.709034E-01, 0]]
+
+    native_head_t = get_ras_to_neuromag_trans(fiducials[0],
+                                              fiducials[1],
+                                              fiducials[2])
+
+    assert_array_equal(data.info['chs'][0]['loc'][3:6],
+                       apply_trans(native_head_t, [-0.818852E-01,
+                                                   -0.464419E-01,
+                                                   0.880970E-01]))
+    assert_array_equal(data.info['chs'][0]['loc'][6:9],
+                       apply_trans(native_head_t, [-0.966161E-01,
+                                                   0.338437E-01,
+                                                   0.558559E-01]))
+    assert_array_equal(data.info['chs'][80]['loc'][3:6],
+                       apply_trans(native_head_t, [-0.878098E-01,
+                                                   -0.348737E-01,
+                                                   0.907238E-01]))
+    assert_array_equal(data.info['chs'][80]['loc'][6:9],
+                       apply_trans(native_head_t, [-0.958327E-01,
+                                                   0.451337E-01,
+                                                   0.541672E-01]))
 
 
 @testing.requires_testing_data
