@@ -11,14 +11,12 @@ import pytest
 from numpy.testing import assert_array_equal
 
 import mne
-from mne.datasets import testing
+from mne.datasets.testing import data_path, requires_testing_data
 from mne.transforms import apply_trans, get_ras_to_neuromag_trans
 
-crnt_dir = os.getcwd()
-
 # Load AC, DC, and Phase data.
-boxy_data_folder = mne.datasets.boxy_example.data_path()
-boxy_raw_dir = os.path.join(boxy_data_folder, 'Participant-1')
+boxy_raw_dir = os.path.join(data_path(download=False),
+                            'BOXY', 'boxy_short_recording')
 
 raw_intensity_dc = mne.io.read_raw_boxy(boxy_raw_dir, 'DC',
                                         verbose=True).load_data()
@@ -41,7 +39,7 @@ mtg_list = [mtg_a, mtg_b]
 thresh = 1e-10
 
 
-@testing.requires_testing_data
+@requires_testing_data
 @pytest.mark.parametrize('datatype,data', [('ac', raw_intensity_ac),
                                            ('dc', raw_intensity_dc),
                                            ('ph', raw_intensity_ph)])
@@ -59,8 +57,12 @@ def test_boxy_load(datatype, data):
     # Check wavelengths for montages
     assert data.info['chs'][0]['loc'][9] == 690
     assert data.info['chs'][1]['loc'][9] == 830
+    assert data.info['chs'][2]['loc'][9] == 690
+    assert data.info['chs'][3]['loc'][9] == 830
     assert data.info['chs'][80]['loc'][9] == 690
     assert data.info['chs'][81]['loc'][9] == 830
+    assert data.info['chs'][82]['loc'][9] == 690
+    assert data.info['chs'][83]['loc'][9] == 830
 
     # Check our markers
     all_events = mne.find_events(data, stim_channel=['Markers a'])
@@ -69,6 +71,8 @@ def test_boxy_load(datatype, data):
     assert np.unique(all_events[:, 2]).tolist() == [1, 2, 1000, 2000]
 
     # Check location of sources and detectors
+    # We'll check the first two unique sources and detectors for each montage
+    # These values were taken from the .elp file
     fiducials = [[0.912775E-01, 0, 0],
                  [0.599716E-03, 0.784103E-01, -0.231296E-17],
                  [-0.606755E-02, -0.709034E-01, 0]]
@@ -77,25 +81,64 @@ def test_boxy_load(datatype, data):
                                               fiducials[1],
                                               fiducials[2])
 
+    # Sources
     assert_array_equal(data.info['chs'][0]['loc'][3:6],
                        apply_trans(native_head_t, [-0.818852E-01,
                                                    -0.464419E-01,
                                                    0.880970E-01]))
-    assert_array_equal(data.info['chs'][0]['loc'][6:9],
-                       apply_trans(native_head_t, [-0.966161E-01,
-                                                   0.338437E-01,
-                                                   0.558559E-01]))
+
+    assert_array_equal(data.info['chs'][2]['loc'][3:6],
+                       apply_trans(native_head_t, [-0.898024E-01,
+                                                   -0.456557E-01,
+                                                   0.600431E-01]))
+
     assert_array_equal(data.info['chs'][80]['loc'][3:6],
                        apply_trans(native_head_t, [-0.878098E-01,
                                                    -0.348737E-01,
                                                    0.907238E-01]))
+
+    assert_array_equal(data.info['chs'][82]['loc'][3:6],
+                       apply_trans(native_head_t, [-0.971674E-01,
+                                                   -0.360763E-01,
+                                                   0.599644E-01]))
+
+    # Detectors
+    assert_array_equal(data.info['chs'][0]['loc'][6:9],
+                       apply_trans(native_head_t, [-0.966161E-01,
+                                                   0.338437E-01,
+                                                   0.558559E-01]))
+
+    assert_array_equal(data.info['chs'][10]['loc'][6:9],
+                       apply_trans(native_head_t, [-0.965480E-01,
+                                                   0.295639E-01,
+                                                   0.802247E-01]))
+
     assert_array_equal(data.info['chs'][80]['loc'][6:9],
                        apply_trans(native_head_t, [-0.958327E-01,
                                                    0.451337E-01,
                                                    0.541672E-01]))
 
+    assert_array_equal(data.info['chs'][90]['loc'][6:9],
+                       apply_trans(native_head_t, [-0.932942E-01,
+                                                   0.408094E-01,
+                                                   0.775681E-01]))
 
-@testing.requires_testing_data
+    # Check channel types
+    chan_type = dict(ac='302 (FIFFV_COIL_FNIRS_CW_AMPLITUDE)',
+                     dc='302 (FIFFV_COIL_FNIRS_CW_AMPLITUDE)',
+                     ph='305 (FIFFV_COIL_FNIRS_FD_PHASE)')
+
+    assert str(data.info['chs'][0]['kind']) == '1100 (FIFFV_FNIRS_CH)'
+    assert str(data.info['chs'][0]['coil_type']) == chan_type[datatype]
+
+    assert str(data.info['chs'][160]['kind']) == '3 (FIFFV_STIM_CH)'
+    assert str(data.info['chs'][160]['coil_type']) == '0 (FIFFV_COIL_NONE)'
+
+    assert str(data.info['chs'][161]['kind']) == '3 (FIFFV_STIM_CH)'
+    assert str(data.info['chs'][161]['coil_type']) == '0 (FIFFV_COIL_NONE)'
+
+
+@requires_testing_data
 @pytest.mark.parametrize('datatype,data', [('ac', raw_intensity_ac),
                                            ('dc', raw_intensity_dc),
                                            ('ph', raw_intensity_ph)])
@@ -104,7 +147,8 @@ def test_boxy_raw(datatype, data):
         for b_num, i_blk in enumerate(['001', '002']):
 
             # Load our p_pod files.
-            filename = os.path.join(crnt_dir, 'dev', 'boxy_p_pod_files',
+            filename = os.path.join(data_path(download=False), 'BOXY',
+                                    'boxy_short_recording', 'boxy_p_pod_files',
                                     '1anc071' + i_mtg + '.' + i_blk +
                                     'raw_data.mat')
             ppod_raw = spio.loadmat(filename)
@@ -124,7 +168,7 @@ def test_boxy_raw(datatype, data):
             assert (abs(ppod_raw[datatype] - py_data) <= thresh).all()
 
 
-@testing.requires_testing_data
+@requires_testing_data
 @pytest.mark.parametrize('datatype,data', [('ac', raw_intensity_ac),
                                            ('dc', raw_intensity_dc),
                                            ('ph', raw_intensity_ph)])
@@ -179,12 +223,14 @@ def test_boxy_epochs(datatype, data):
     for m_num, i_mtg in enumerate(['a', 'b']):
 
         # Load our p_pod files, both blocks.
-        filename = os.path.join(crnt_dir, 'dev', 'boxy_p_pod_files',
+        filename = os.path.join(data_path(download=False), 'BOXY',
+                                'boxy_short_recording', 'boxy_p_pod_files',
                                 '1anc071' + i_mtg + '.001' +
                                 'epoch_data.mat')
         ppod_epoch1 = spio.loadmat(filename)
 
-        filename = os.path.join(crnt_dir, 'dev', 'boxy_p_pod_files',
+        filename = os.path.join(data_path(download=False), 'BOXY',
+                                'boxy_short_recording', 'boxy_p_pod_files',
                                 '1anc071' + i_mtg + '.002' +
                                 'epoch_data.mat')
         ppod_epoch2 = spio.loadmat(filename)
@@ -209,7 +255,7 @@ def test_boxy_epochs(datatype, data):
         assert (abs(ppod_epochs - py_epochs) <= thresh).all()
 
 
-@testing.requires_testing_data
+@requires_testing_data
 @pytest.mark.parametrize('datatype,data', [('ac', raw_intensity_ac),
                                            ('dc', raw_intensity_dc),
                                            ('ph', raw_intensity_ph)])
@@ -271,7 +317,8 @@ def test_boxy_evoked(datatype, data):
     for m_num, i_mtg in enumerate(['a', 'b']):
 
         # Load in our p_pod files.
-        filename = os.path.join(crnt_dir, 'dev', 'boxy_p_pod_files',
+        filename = os.path.join(data_path(download=False), 'BOXY',
+                                'boxy_short_recording', 'boxy_p_pod_files',
                                 '1anc071' + i_mtg + '.002' +
                                 'evoke_data.mat')
         ppod_evoke_all = spio.loadmat(filename)
