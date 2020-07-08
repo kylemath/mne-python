@@ -8,7 +8,7 @@ import re as re
 import numpy as np
 import scipy.io as spio
 import pytest
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_allclose
 
 import mne
 from mne.datasets.testing import data_path, requires_testing_data
@@ -37,6 +37,7 @@ mtg_list = [mtg_a, mtg_b]
 
 # Determine to which decimal place we will compare.
 thresh = 1e-10
+allowed_dist_error = 0.000001
 
 
 @requires_testing_data
@@ -82,46 +83,46 @@ def test_boxy_load(datatype, data):
                                               fiducials[2])
 
     # Sources
-    assert_array_equal(data.info['chs'][0]['loc'][3:6],
-                       apply_trans(native_head_t, [-0.818852E-01,
-                                                   -0.464419E-01,
-                                                   0.880970E-01]))
+    assert_allclose(data.info['chs'][0]['loc'][3:6],
+                    apply_trans(native_head_t,
+                                [-0.818852E-01, -0.464419E-01, 0.880970E-01]),
+                    atol=allowed_dist_error)
 
-    assert_array_equal(data.info['chs'][2]['loc'][3:6],
-                       apply_trans(native_head_t, [-0.898024E-01,
-                                                   -0.456557E-01,
-                                                   0.600431E-01]))
+    assert_allclose(data.info['chs'][2]['loc'][3:6],
+                    apply_trans(native_head_t,
+                                [-0.898024E-01, -0.456557E-01, 0.600431E-01]),
+                    atol=allowed_dist_error)
 
-    assert_array_equal(data.info['chs'][80]['loc'][3:6],
-                       apply_trans(native_head_t, [-0.878098E-01,
-                                                   -0.348737E-01,
-                                                   0.907238E-01]))
+    assert_allclose(data.info['chs'][80]['loc'][3:6],
+                    apply_trans(native_head_t,
+                                [-0.878098E-01, -0.348737E-01, 0.907238E-01]),
+                    atol=allowed_dist_error)
 
-    assert_array_equal(data.info['chs'][82]['loc'][3:6],
-                       apply_trans(native_head_t, [-0.971674E-01,
-                                                   -0.360763E-01,
-                                                   0.599644E-01]))
+    assert_allclose(data.info['chs'][82]['loc'][3:6],
+                    apply_trans(native_head_t,
+                                [-0.971674E-01, -0.360763E-01, 0.599644E-01]),
+                    atol=allowed_dist_error)
 
     # Detectors
-    assert_array_equal(data.info['chs'][0]['loc'][6:9],
-                       apply_trans(native_head_t, [-0.966161E-01,
-                                                   0.338437E-01,
-                                                   0.558559E-01]))
+    assert_allclose(data.info['chs'][0]['loc'][6:9],
+                    apply_trans(native_head_t,
+                                [-0.966161E-01, 0.338437E-01, 0.558559E-01]),
+                    atol=allowed_dist_error)
 
-    assert_array_equal(data.info['chs'][10]['loc'][6:9],
-                       apply_trans(native_head_t, [-0.965480E-01,
-                                                   0.295639E-01,
-                                                   0.802247E-01]))
+    assert_allclose(data.info['chs'][10]['loc'][6:9],
+                    apply_trans(native_head_t,
+                                [-0.965480E-01, 0.295639E-01, 0.802247E-01]),
+                    atol=allowed_dist_error)
 
-    assert_array_equal(data.info['chs'][80]['loc'][6:9],
-                       apply_trans(native_head_t, [-0.958327E-01,
-                                                   0.451337E-01,
-                                                   0.541672E-01]))
+    assert_allclose(data.info['chs'][80]['loc'][6:9],
+                    apply_trans(native_head_t,
+                                [-0.958327E-01, 0.451337E-01, 0.541672E-01]),
+                    atol=allowed_dist_error)
 
-    assert_array_equal(data.info['chs'][90]['loc'][6:9],
-                       apply_trans(native_head_t, [-0.932942E-01,
-                                                   0.408094E-01,
-                                                   0.775681E-01]))
+    assert_allclose(data.info['chs'][90]['loc'][6:9],
+                    apply_trans(native_head_t,
+                                [-0.932942E-01, 0.408094E-01, 0.775681E-01]),
+                    atol=allowed_dist_error)
 
     # Check channel types
     chan_type = dict(ac='302 (FIFFV_COIL_FNIRS_CW_AMPLITUDE)',
