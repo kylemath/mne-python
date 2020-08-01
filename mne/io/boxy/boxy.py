@@ -187,12 +187,22 @@ class RawBOXY(BaseRaw):
         # Now let's grab our markers, if they are present.
         if len(mrk_data) != 0:
             mrk_data = np.asarray(mrk_data)
-            marker_idx = np.where(mrk_data != 0)[0]
-            onset = marker_idx * (1.0 / srate)
-            duration = np.zeros((len(marker_idx),))
-            description = np.asarray([str(i_mrk)for i_mrk in
-                                      mrk_data[marker_idx]])
-            description = [float(i_mrk)for i_mrk in mrk_data[marker_idx]]
+            # We only want the first instance of each trigger.
+            prev_mrk = 0
+            mrk_idx = list()
+            duration = list()
+            tmp_dur = 0
+            for i_num, i_mrk in enumerate(mrk_data):
+                if i_mrk != 0 and i_mrk != prev_mrk:
+                    mrk_idx.append(i_num)
+                if i_mrk != 0 and i_mrk == prev_mrk:
+                    tmp_dur += 1
+                if i_mrk == 0 and i_mrk != prev_mrk:
+                    duration.append((tmp_dur + 1) * (1.0 / srate))
+                    tmp_dur = 0
+                prev_mrk = i_mrk
+            onset = [i_mrk * (1.0 / srate) for i_mrk in mrk_idx]
+            description = [float(i_mrk)for i_mrk in mrk_data[mrk_idx]]
             annot = Annotations(onset, duration, description)
             self.set_annotations(annot)
 
