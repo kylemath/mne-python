@@ -104,11 +104,11 @@ def test_boxy_filetypes():
 def test_boxy_digaux():
     """Test reading BOXY files and generating annotations from digaux."""
     # We'll test both parsed and unparsed boxy data files.
-    # Set our comparison threshold nad sampling rate.
+    # Set our comparison threshold and sampling rate.
     thresh = 1e-6
     srate = 79.4722
 
-    # Load AC, DC, and Phase data from an unparsed file first.
+    # Load AC, DC, and Phase data from a parsed file first.
     boxy_raw_dir = os.path.join(data_path(download=False),
                                 'BOXY', 'boxy_digaux_recording', 'parsed')
 
@@ -123,14 +123,14 @@ def test_boxy_digaux():
     assert_array_equal(par_ac.annotations.description, event_list)
     assert_array_equal(par_ph.annotations.description, event_list)
 
-    # Check that our event timings what we expect.
+    # Check that our event timings are what we expect.
     event_onset = [i_time * (1.0/srate) for i_time in
                    [105, 185, 265, 344, 424]]
     assert_allclose(par_dc.annotations.onset, event_onset, atol=thresh)
     assert_allclose(par_ac.annotations.onset, event_onset, atol=thresh)
     assert_allclose(par_ph.annotations.onset, event_onset, atol=thresh)
 
-    # Now we'll load data from a parsed file.
+    # Now we'll load data from an unparsed file.
     boxy_raw_dir = os.path.join(data_path(download=False),
                                 'BOXY', 'boxy_digaux_recording', 'unparsed')
 
