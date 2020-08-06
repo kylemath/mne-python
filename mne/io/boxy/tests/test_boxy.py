@@ -124,7 +124,7 @@ def test_boxy_digaux():
     assert_array_equal(par_ph.annotations.description, event_list)
 
     # Check that our event timings are what we expect.
-    event_onset = [i_time * (1.0/srate) for i_time in
+    event_onset = [i_time * (1.0 / srate) for i_time in
                    [105, 185, 265, 344, 424]]
     assert_allclose(par_dc.annotations.onset, event_onset, atol=thresh)
     assert_allclose(par_ac.annotations.onset, event_onset, atol=thresh)
@@ -145,8 +145,8 @@ def test_boxy_digaux():
     assert_array_equal(unp_ac.annotations.description, event_list)
     assert_array_equal(unp_ph.annotations.description, event_list)
 
-    # Check that our event timings what we expect.
-    event_onset = [i_time * (1.0/srate) for i_time in
+    # Check that our event timings are what we expect.
+    event_onset = [i_time * (1.0 / srate) for i_time in
                    [105, 185, 265, 344, 424]]
     assert_allclose(unp_dc.annotations.onset, event_onset, atol=thresh)
     assert_allclose(unp_ac.annotations.onset, event_onset, atol=thresh)
