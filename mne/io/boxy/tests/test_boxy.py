@@ -27,6 +27,24 @@ def test_boxy_load():
     mne_ac = mne.io.read_raw_boxy(boxy_file, 'AC', verbose=True).load_data()
     mne_ph = mne.io.read_raw_boxy(boxy_file, 'Ph', verbose=True).load_data()
 
+    # Since this data set has no 'digaux' for creating trigger annotations,
+    # let's make sure our Raw object has no annotations.
+
+    # Check description.
+    assert mne_dc._annotations.description.size == 0
+    assert mne_ac._annotations.description.size == 0
+    assert mne_ph._annotations.description.size == 0
+
+    # Check duration.
+    assert mne_dc._annotations.duration.size == 0
+    assert mne_ac._annotations.duration.size == 0
+    assert mne_ph._annotations.duration.size == 0
+
+    # Check onset.
+    assert mne_dc._annotations.onset.size == 0
+    assert mne_ac._annotations.onset.size == 0
+    assert mne_ph._annotations.onset.size == 0
+
     # Load p_pod data.
     p_pod_file = os.path.join(data_path(download=False),
                               'BOXY', 'boxy_0_40_recording',
